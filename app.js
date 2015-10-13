@@ -1,27 +1,47 @@
 var tabella = $("tr>td>table>tbody:contains(Attività Didattiche)");
 var nodiEsami = [];
+var nodiAtt = [];
 var esami = [];
 var arrayEsami = [];
 var data = [];
 
-function Esame(materia, crediti, data,voto ) {
+function Esame(materia, crediti, data, voto, sostenuto) {
     this.materia = materia;
     this.crediti = crediti;
     this.data = data;
     this.voto = voto;
-    
+    this.sostenuto = sostenuto;
 }
 
 function init() {
-    trovaEsamiFatti(tabella);
+  //  trovaEsamiFatti();
+    trovaAttDidattiche();
     riempiEsami();
-    console.log(esami);
     riempiArrayDaEsami();
+    console.log(arrayEsami);
     inserisciDati();
 }
 
+function trovaAttDidattiche() {
+    $(tabella).children('tr').each(function() {
+        if (attValida($(this)) === true) {
+            nodiEsami.push(this);
+        }
+    });
+}
+
+function attValida(riga) {
+    //concateno '.' perché isNaN("") è true allora devo fare questo workaround
+    if (isNaN(riga.find('td:nth-child(1)').text() + ".")) {
+        return false;
+    } else {
+        
+        return true;
+    }
+}
+
 function loadLib() {
-    console.log("loading");
+    
     var imported0 = document.createElement('script');
     imported0.src = 'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment-with-locales.min.js';
     document.head.appendChild(imported0);
@@ -36,7 +56,7 @@ function loadLib() {
     document.head.appendChild(imported2);
 }
 
-function trovaEsamiFatti(tabella) {
+function trovaEsamiFatti() {
     $(tabella).children('tr').each(function() {
         if (esameFatto($(this)) === true) {
             nodiEsami.push(this);
@@ -66,17 +86,17 @@ function creaEsame(nodoEsame) {
     var crediti = 0;
     var voto = 0;
     var data;
+    var sostenuto;
     materia = materiaDaNodo(nodoEsame);
     crediti = parseInt(nodoEsame.find('td:nth-child(7)').text());
-    voto = parseInt(votoDaNodo(nodoEsame));
-    data = dataDaNodo(nodoEsame);
-    /*
-    console.log(materia);
-    console.log(crediti);
-    console.log(data);
-    console.log(voto);
-    console.log("----------------------");*/
-    return new Esame(materia, crediti, new Date(moment(data, "DD-MM-YYYY")),voto);
+    if (esameFatto(nodoEsame)) {
+        sostenuto = true;
+        voto = parseInt(votoDaNodo(nodoEsame));
+        data = dataDaNodo(nodoEsame);
+    } else {
+        sostenuto = false;
+    }
+    return new Esame(materia, crediti, new Date(moment(data, "DD-MM-YYYY")), voto, sostenuto);
 }
 
 function materiaDaNodo(nodo) {
@@ -99,11 +119,9 @@ function dataDaNodo(nodo) {
 function waitForElement() {
     if (typeof moment !== "undefined") {
         //variable exists, do what you want
-        console.log("faaaaaatooo");
         init();
         /*salva();*/
     } else {
-        console.log("aaaaaaaaaaaaaaaa");
         setTimeout(function() {
             waitForElement();
         }, 250);
@@ -111,7 +129,7 @@ function waitForElement() {
 }
 
 function Workbook() {
-    console.log("creo wb");
+    
     if (!(this instanceof Workbook)) return new Workbook();
     this.SheetNames = [];
     this.Sheets = {};
@@ -130,19 +148,13 @@ function estraiValoriDaArray(obj) {
 }
 
 function inserisciDati() {
-    data[0] = Object.getOwnPropertyNames(esami[0]);
+    data[0] = Object.getOwnPropertyNames(esami[0]); //intestazione della tabella
     for (var i = 0; i < arrayEsami.length; i++) {
         data[i + 1] = arrayEsami[i];
     }
 }
 
 function salva() {
-    /* original data */
-    /*data = [
-         Object.getOwnPropertyNames(esami[0]), [true, false, null, "sheetjs"],
-         arrayEsami[0], ["foo", "bar", new Date("2014-02-19T14:30Z"), "0.3"],
-         ["baz", null, "qux"]
-     ];*/
     var ws_name = "Esse3";
     /* dummy workbook constructor */
     function Workbook() {
