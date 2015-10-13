@@ -4,7 +4,9 @@ var nodiAtt = [];
 var esami = [];
 var arrayEsami = [];
 var data = [];
-
+var attDaSostenere = [];
+//loadLib();
+//waitForElement(); //carico le librerie
 function Esame(materia, crediti, data, voto, sostenuto) {
     this.materia = materia;
     this.crediti = crediti;
@@ -14,11 +16,10 @@ function Esame(materia, crediti, data, voto, sostenuto) {
 }
 
 function init() {
-  //  trovaEsamiFatti();
     trovaAttDidattiche();
     riempiEsami();
+    ordinaEsami();
     riempiArrayDaEsami();
-    console.log(arrayEsami);
     inserisciDati();
 }
 
@@ -35,21 +36,19 @@ function attValida(riga) {
     if (isNaN(riga.find('td:nth-child(1)').text() + ".")) {
         return false;
     } else {
-        
         return true;
     }
 }
 
 function loadLib() {
-    
     var imported0 = document.createElement('script');
     imported0.src = 'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment-with-locales.min.js';
     document.head.appendChild(imported0);
     var imported = document.createElement('script');
-    imported.src = 'http://oss.sheetjs.com/js-xlsx/xlsx.core.min.js';
+    imported.src = 'https://cdn.rawgit.com/SheetJS/js-xlsx/master/dist/xlsx.full.min.js';
     document.head.appendChild(imported);
     var imported1 = document.createElement('script');
-    imported1.src = 'http://sheetjs.com/demos/Blob.js';
+    imported1.src = 'https://cdn.rawgit.com/eligrey/Blob.js/master/Blob.js';
     document.head.appendChild(imported1);
     var imported2 = document.createElement('script');
     imported2.src = 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.min.js';
@@ -79,6 +78,17 @@ function riempiEsami() {
     for (var i = 0; i < nodiEsami.length; i++) {
         esami[i] = creaEsame($(nodiEsami[i]));
     }
+}
+
+function ordinaEsami() {
+    console.log(esami);
+    for (var i = 0; i < esami.length; i++) {
+        if (!esami[i].sostenuto) {
+            console.log(esami[i].materia);
+            attDaSostenere.push(esami[i]);
+        }
+    }
+    //esami=esami.concat(attDaSostenere);
 }
 
 function creaEsame(nodoEsame) {
@@ -129,16 +139,22 @@ function waitForElement() {
 }
 
 function Workbook() {
-    
     if (!(this instanceof Workbook)) return new Workbook();
     this.SheetNames = [];
     this.Sheets = {};
 }
 
 function riempiArrayDaEsami() {
+	//console.log(esami);
     for (var i = 0; i < esami.length; i++) {
-        arrayEsami[i] = estraiValoriDaArray(esami[i]);
+        if (esami[i].sostenuto) {
+        	console.log(esami[i]);
+            arrayEsami.push( estraiValoriDaArray(esami[i]));
+        }
     }
+     for (var i = 0; i < attDaSostenere.length; i++) {
+         arrayEsami.push( estraiValoriDaArray(attDaSostenere[i]));
+     }
 }
 
 function estraiValoriDaArray(obj) {
