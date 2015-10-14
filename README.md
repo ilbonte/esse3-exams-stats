@@ -27,6 +27,7 @@ Alcuni esempi di utilizzo del file generato:
 8. PROFIT!!!
 
 ### Note e precisazioni:
-- Non è possibile creare delle formule nel foglio Excel direttamente dallo script, quindi se vuoi calcolare la media, media ponderata o altro lo devi fare da Execel 
+- Il voto degli esami IDO(idoneo), AP(approvato) vengono impostati pari alla media ponderata. 
+- Non è possibile creare delle formule nel foglio Excel direttamente dallo script, quindi se vuoi calcolare la media, media ponderata o altro lo devi fare da Excel. 
 - Visto che è uno script eseguito in locale (sul tuo pc) puoi stare tranquillo che ai tuoi esami non succederà niente di strano.
 - I dati negli esempi riportati sono generati casualemente.
