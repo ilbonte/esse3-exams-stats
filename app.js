@@ -5,8 +5,9 @@ var esami = [];
 var arrayEsami = [];
 var data = [];
 var attDaSostenere = [];
-//loadLib();
-//waitForElement(); 
+var media = 0;
+loadLib();
+waitForElement();
 /*
 FLOW:
 loadLib() carica le librerie
@@ -14,13 +15,15 @@ waitForElement() controlla che le librerie siano caricate e chiama init
 init()
 	trovaAttDidattiche() riempie nodiEsami con le attività valide
 		attValida() controlla che la riga della tabella che stiamo esaminando sia un attività
-	riempiEsami() crea il vettore di esami (oggettie esame)
+	riempiEsami() crea il vettore di esami (oggetti esame)
 		creaEsame() prende la riga della tabella ed estrapola i dati
 			materiaDaNodo() estrae la materia
-			esameFatto() determina se un determinato esame è stato sotenuto o meno
+			esameFatto() determina se un esame è stato sotenuto o meno
 			esameConVoto() determina se un esame ha un voto numerico oppure soltanto approvato/idoneo/ecc
 			votoDaNodo() estrae il voto dal nodo
 			dataDaNodo() estrae la data in cui è stato sostenuto l'esame
+	calcolaMedia() calcola la media ponderata dei voti
+	aggiornaEsamiSenzaVoto() imposta la media come voto degli esami senza voti
 	ordinaEsami() separa gli esami da sostenere da quelli sostenuti
 	riempiArrayDaEsami() crea un vettore di vettori contenete gli esami. questo perché la libreria js-xlsx accetta solo vettori
 		estraiValoriDaArray() prende un oggetto generico e restiutisce un array con i suoi elementi
@@ -39,9 +42,13 @@ function Esame(materia, crediti, data, voto, sostenuto) {
 function init() {
     trovaAttDidattiche();
     riempiEsami();
+    calcolaMedia();
+    aggiornaEsamiSenzaVoto();
     ordinaEsami();
     riempiArrayDaEsami();
     inserisciDati();
+    salva();
+    console.log(esami);
 }
 
 function trovaAttDidattiche() {
@@ -66,7 +73,7 @@ function loadLib() {
     imported0.src = 'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment-with-locales.min.js';
     document.head.appendChild(imported0);
     var imported = document.createElement('script');
-    imported.src = 'https://cdn.rawgit.com/SheetJS/js-xlsx/master/dist/xlsx.full.min.js';
+    imported.src = 'https://cdn.rawgit.com/SheetJS/js-xlsx/master/dist/xlsx.core.min.js';
     document.head.appendChild(imported);
     var imported1 = document.createElement('script');
     imported1.src = 'https://cdn.rawgit.com/eligrey/Blob.js/master/Blob.js';
@@ -75,20 +82,12 @@ function loadLib() {
     imported2.src = 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.min.js';
     document.head.appendChild(imported2);
 }
-/*
-function trovaEsamiFatti() {
-    $(tabella).children('tr').each(function() {
-        if (esameFatto($(this))) {
-            nodiEsami.push(this);
-        }
-    });
-}*/
+
 function esameFatto(riga) {
     var numero = "a";
     testo = riga.find('td:nth-child(10)').text();
     if (testo === "") {
         return false;
-        console.log("testo");
     } else return true;
 }
 
@@ -97,6 +96,9 @@ function esameConVoto(riga) {
     testo = riga.find('td:nth-child(10)').text();
     numero = /[^-]+/.exec(testo);
     if (isNaN(numero) || numero === null) {
+        if (numero.toString() === "30L ") {
+            return true;
+        }
         return false;
     } else {
         return true;
@@ -129,7 +131,7 @@ function creaEsame(nodoEsame) {
         if (esameConVoto(nodoEsame)) {
             voto = parseInt(votoDaNodo(nodoEsame));
         } else {
-        	voto=0; //temporaneamente lasciato a 0 
+            voto = 0; //temporaneamente lasciato a 0 
         }
         sostenuto = true;
         data = dataDaNodo(nodoEsame);
@@ -146,7 +148,13 @@ function materiaDaNodo(nodo) {
 
 function votoDaNodo(nodo) {
     var votoS = nodo.find('td:nth-child(10)').text();
-    return /[^-]+/.exec(votoS).toString();
+    var voto;
+    voto = /[^-]+/.exec(votoS).toString();
+    if (voto === "30L ") {
+        return 31;
+    } else {
+        return voto;
+    }
 }
 
 function dataDaNodo(nodo) {
@@ -154,12 +162,32 @@ function dataDaNodo(nodo) {
     return testo.slice(-10).toString();
 }
 
+function calcolaMedia() {
+    var sommaVoti = 0,
+        sommaCrediti = 0;
+    for (var i = 0; i < esami.length; i++) {
+        if (esami[i].sostenuto && esami[i].voto > 0) {
+            sommaVoti = sommaVoti + (esami[i].voto * esami[i].crediti);
+            sommaCrediti += esami[i].crediti;
+        }
+    }
+    media = sommaVoti / sommaCrediti;
+}
+
+function aggiornaEsamiSenzaVoto() {
+    for (var i = 0; i < esami.length; i++) {
+        if (esami[i].sostenuto && esami[i].voto === 0) {
+            esami[i].voto = Math.ceil(media);
+        }
+    }
+}
+//
 function waitForElement() {
-    if (typeof moment !== "undefined") {
+    if ((typeof moment !== "undefined") && (typeof XLSX !== "undefined")) {
         //variable exists, do what you want
         init();
-        /*salva();*/
     } else {
+        console.log("caricamento...");
         setTimeout(function() {
             waitForElement();
         }, 250);
@@ -173,7 +201,6 @@ function Workbook() {
 }
 
 function riempiArrayDaEsami() {
-    //console.log(esami);
     for (var i = 0; i < esami.length; i++) {
         if (esami[i].sostenuto) {
             arrayEsami.push(estraiValoriDaArray(esami[i]));
@@ -276,5 +303,5 @@ function salva() {
     /* the saveAs call downloads a file on the local machine */
     saveAs(new Blob([s2ab(wbout)], {
         type: ""
-    }), "test.xlsx")
+    }), "esami.xlsx")
 }
