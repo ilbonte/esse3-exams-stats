@@ -6,7 +6,28 @@ var arrayEsami = [];
 var data = [];
 var attDaSostenere = [];
 //loadLib();
-//waitForElement(); //carico le librerie
+//waitForElement(); 
+/*
+FLOW:
+loadLib() carica le librerie
+waitForElement() controlla che le librerie siano caricate e chiama init
+init()
+	trovaAttDidattiche() riempie nodiEsami con le attività valide
+		attValida() controlla che la riga della tabella che stiamo esaminando sia un attività
+	riempiEsami() crea il vettore di esami (oggettie esame)
+		creaEsame() prende la riga della tabella ed estrapola i dati
+			materiaDaNodo() estrae la materia
+			esameFatto() determina se un determinato esame è stato sotenuto o meno
+			esameConVoto() determina se un esame ha un voto numerico oppure soltanto approvato/idoneo/ecc
+			votoDaNodo() estrae il voto dal nodo
+			dataDaNodo() estrae la data in cui è stato sostenuto l'esame
+	ordinaEsami() separa gli esami da sostenere da quelli sostenuti
+	riempiArrayDaEsami() crea un vettore di vettori contenete gli esami. questo perché la libreria js-xlsx accetta solo vettori
+		estraiValoriDaArray() prende un oggetto generico e restiutisce un array con i suoi elementi
+	inserisciDati() inserisci i vettori estratti nel vettore che verrà "stampato" nel file xlsx
+salva() crea e scarica il file xlsx
+
+ */
 function Esame(materia, crediti, data, voto, sostenuto) {
     this.materia = materia;
     this.crediti = crediti;
@@ -25,7 +46,7 @@ function init() {
 
 function trovaAttDidattiche() {
     $(tabella).children('tr').each(function() {
-        if (attValida($(this)) === true) {
+        if (attValida($(this))) {
             nodiEsami.push(this);
         }
     });
@@ -54,16 +75,24 @@ function loadLib() {
     imported2.src = 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.min.js';
     document.head.appendChild(imported2);
 }
-
+/*
 function trovaEsamiFatti() {
     $(tabella).children('tr').each(function() {
-        if (esameFatto($(this)) === true) {
+        if (esameFatto($(this))) {
             nodiEsami.push(this);
         }
     });
+}*/
+function esameFatto(riga) {
+    var numero = "a";
+    testo = riga.find('td:nth-child(10)').text();
+    if (testo === "") {
+        return false;
+        console.log("testo");
+    } else return true;
 }
 
-function esameFatto(riga) {
+function esameConVoto(riga) {
     var numero = "a";
     testo = riga.find('td:nth-child(10)').text();
     numero = /[^-]+/.exec(testo);
@@ -81,14 +110,11 @@ function riempiEsami() {
 }
 
 function ordinaEsami() {
-    console.log(esami);
     for (var i = 0; i < esami.length; i++) {
         if (!esami[i].sostenuto) {
-            console.log(esami[i].materia);
             attDaSostenere.push(esami[i]);
         }
     }
-    //esami=esami.concat(attDaSostenere);
 }
 
 function creaEsame(nodoEsame) {
@@ -100,8 +126,12 @@ function creaEsame(nodoEsame) {
     materia = materiaDaNodo(nodoEsame);
     crediti = parseInt(nodoEsame.find('td:nth-child(7)').text());
     if (esameFatto(nodoEsame)) {
+        if (esameConVoto(nodoEsame)) {
+            voto = parseInt(votoDaNodo(nodoEsame));
+        } else {
+        	voto=0; //temporaneamente lasciato a 0 
+        }
         sostenuto = true;
-        voto = parseInt(votoDaNodo(nodoEsame));
         data = dataDaNodo(nodoEsame);
     } else {
         sostenuto = false;
@@ -111,7 +141,6 @@ function creaEsame(nodoEsame) {
 
 function materiaDaNodo(nodo) {
     testo = nodo.find('td:nth-child(2)').text();
-    // return /\D+[\d]+/.exec(testo).toString();
     return testo.substring(9).toString();
 }
 
@@ -122,8 +151,7 @@ function votoDaNodo(nodo) {
 
 function dataDaNodo(nodo) {
     testo = nodo.find('td:nth-child(10)').text();
-    var sub = /[0-9]+\D+/.exec(testo).toString();
-    return testo.replace(sub, "");
+    return testo.slice(-10).toString();
 }
 
 function waitForElement() {
@@ -145,16 +173,15 @@ function Workbook() {
 }
 
 function riempiArrayDaEsami() {
-	//console.log(esami);
+    //console.log(esami);
     for (var i = 0; i < esami.length; i++) {
         if (esami[i].sostenuto) {
-        	console.log(esami[i]);
-            arrayEsami.push( estraiValoriDaArray(esami[i]));
+            arrayEsami.push(estraiValoriDaArray(esami[i]));
         }
     }
-     for (var i = 0; i < attDaSostenere.length; i++) {
-         arrayEsami.push( estraiValoriDaArray(attDaSostenere[i]));
-     }
+    for (var i = 0; i < attDaSostenere.length; i++) {
+        arrayEsami.push(estraiValoriDaArray(attDaSostenere[i]));
+    }
 }
 
 function estraiValoriDaArray(obj) {
