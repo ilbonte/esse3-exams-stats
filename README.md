@@ -17,7 +17,7 @@ Alcuni esempi di utilizzo del file generato:
 
 ## Come si usa?
 
-1. Copia il codice dello script da qui: https://raw.githubusercontent.com/ilbonte/esse3-exams-stats/master/app.js (ctrl+a, ctrl+v)
+1. Copia il codice dello script da qui: https://raw.githubusercontent.com/ilbonte/esse3-exams-stats/master/app.js (ctrl+a, ctrl+c)
 2. Vai sulla pagina "Carriera" su esse3. 
 3. Apri gli strumenti per gli sviluppatori e vai sulla scheda della console (chrome: ctrl+shift+j)
 4. Incolla il codice (ctrl+v)
